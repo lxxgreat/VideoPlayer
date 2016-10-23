@@ -3,10 +3,13 @@ package com.shane.android.videoplayer;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
+import android.os.SystemClock;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
+import android.view.Window;
 import android.view.WindowManager;
+import android.widget.Toast;
 
 import com.shane.android.videoplayer.bean.Video;
 import com.shane.android.videoplayer.bean.VideoUrl;
@@ -92,6 +95,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     @Override
+    public void onBackPressed() {
+        super.onBackPressed();;
+        moveTaskToBack(true);
+    }
+
+    @Override
     protected void onDestroy() {
         super.onDestroy();
         stopDLNAService();
@@ -133,7 +142,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        this.requestWindowFeature(Window.FEATURE_NO_TITLE);
         setContentView(R.layout.activity_main);
+
         mSuperVideoPlayer = (SuperVideoPlayer) findViewById(R.id.video_player_item_1);
         mPlayBtnView = findViewById(R.id.play_btn);
         mPlayBtnView.setOnClickListener(this);
