@@ -6,6 +6,8 @@ import android.content.res.Resources;
 import android.os.Environment;
 
 import com.danikula.videocache.HttpProxyCacheServer;
+import com.shane.android.videoplayer.util.LogUtil;
+import com.shane.android.videoplayer.widget.SuperVideoPlayer;
 import com.squareup.leakcanary.LeakCanary;
 
 import org.wlf.filedownloader.FileDownloadConfiguration;
@@ -20,7 +22,9 @@ import java.io.File;
  */
 
 public class AppContext extends Application {
+    private static final String TAG = AppContext.class.getSimpleName();
 
+    public static final int MAX_CACHE_FILE_SIZE = 1024 * 1024 * 200; // 200MB
     private static Context sContext;
     private static Resources sResource;
     private HttpProxyCacheServer mProxy;
@@ -71,9 +75,9 @@ public class AppContext extends Application {
         FileDownloadConfiguration.Builder builder = new FileDownloadConfiguration.Builder(this);
 
         // 2.config FileDownloadConfiguration.Builder
-        builder.configFileDownloadDir(Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator +
-                "FileDownloader"); // config the download path
-        // builder.configFileDownloadDir("/storage/sdcard1/FileDownloader");
+        String cacheDir = getFilesDir().getAbsolutePath() + File.separator + "cached_videos";
+        builder.configFileDownloadDir(cacheDir); // config the download path
+        LogUtil.d(TAG, "cacheDir:" + cacheDir);
 
         // allow 3 download tasks at the same time
         builder.configDownloadTaskSize(3);
@@ -88,7 +92,7 @@ public class AppContext extends Application {
         builder.configConnectTimeout(25000); // 25s
 
         // 3.init FileDownloader with the configuration
-        FileDownloadConfiguration configuration = builder.build(); // build FileDownloadConfiguration with the builder
+        FileDownloadConfiguration configuration = builder.build();
         FileDownloader.init(configuration);
     }
 

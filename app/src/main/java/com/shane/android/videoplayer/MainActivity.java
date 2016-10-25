@@ -22,6 +22,7 @@ import com.shane.android.videoplayer.widget.SuperVideoPlayer;
 
 import org.wlf.filedownloader.DownloadFileInfo;
 import org.wlf.filedownloader.FileDownloader;
+import org.wlf.filedownloader.base.Status;
 import org.wlf.filedownloader.listener.OnFileDownloadStatusListener;
 import org.wlf.filedownloader.listener.simple.OnSimpleFileDownloadStatusListener;
 
@@ -64,6 +65,23 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         }
     };
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        this.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        setContentView(R.layout.activity_main);
+
+        mSuperVideoPlayer = (SuperVideoPlayer) findViewById(R.id.video_player_item_1);
+        mPlayBtnView = findViewById(R.id.play_btn);
+        mPlayBtnView.setOnClickListener(this);
+        mSuperVideoPlayer.setVideoPlayCallback(mVideoPlayCallback);
+
+
+        FileDownloader.registerDownloadStatusListener(mOnFileDownloadStatusListener);
+        mapUrlVideo.clear();
+        startDLNAService();
+    }
 
     @Override
     public void onClick(View view) {
@@ -157,22 +175,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        this.requestWindowFeature(Window.FEATURE_NO_TITLE);
-        setContentView(R.layout.activity_main);
-
-        mSuperVideoPlayer = (SuperVideoPlayer) findViewById(R.id.video_player_item_1);
-        mPlayBtnView = findViewById(R.id.play_btn);
-        mPlayBtnView.setOnClickListener(this);
-        mSuperVideoPlayer.setVideoPlayCallback(mVideoPlayCallback);
-
-        FileDownloader.registerDownloadStatusListener(mOnFileDownloadStatusListener);
-        mapUrlVideo.clear();
-        startDLNAService();
-    }
-
     /***
      * 恢复屏幕至竖屏
      */
@@ -206,11 +208,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
         @Override
         public void onFileDownloadStatusPreparing(DownloadFileInfo downloadFileInfo) {
-            // preparing(connecting)
+            long fileSize = downloadFileInfo.getFileSizeLong();
+            LogUtil.d(TAG, "size, onFileDownloadStatusPreparing:" + fileSize);
+            if (fileSize > AppContext.MAX_CACHE_FILE_SIZE) {
+                final String url = downloadFileInfo.getUrl();
+                FileDownloader.pause(url);
+            }
         }
         @Override
         public void onFileDownloadStatusPrepared(DownloadFileInfo downloadFileInfo) {
             // prepared(connected)
+            LogUtil.d(TAG, "size, onFileDownloadStatusPrepared:" + downloadFileInfo.getFileSizeLong());
         }
         @Override
         public void onFileDownloadStatusDownloading(DownloadFileInfo downloadFileInfo, float downloadSpeed, long
@@ -224,6 +232,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         @Override
         public void onFileDownloadStatusCompleted(DownloadFileInfo downloadFileInfo) {
             final String url = downloadFileInfo.getUrl();
+            int status = downloadFileInfo.getStatus();
+            LogUtil.d(TAG, "onFileDownloadStatusCompleted:" + status);
+            if (status != Status.DOWNLOAD_STATUS_COMPLETED) {
+                Toast.makeText(MainActivity.this, "DOWNLOAD_STATUS:"+status, Toast.LENGTH_SHORT).show();
+                FileDownloader.reStart(url);
+                return;
+            }
+
             final String path = downloadFileInfo.getFilePath();
 
             // download completed(the url file has been finished)
@@ -243,7 +259,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         @Override
         public void onFileDownloadStatusFailed(String url, DownloadFileInfo downloadFileInfo, FileDownloadStatusFailReason failReason) {
             // error occur, see failReason for details, some of the failReason you must concern
-
+            LogUtil.d(TAG, "onFileDownloadStatusFailed:" + downloadFileInfo.getStatus());
             String failType = failReason.getType();
             String failUrl = failReason.getUrl();// or failUrl = url, both url and failReason.getUrl() are the same
 

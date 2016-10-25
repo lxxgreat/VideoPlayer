@@ -98,15 +98,15 @@ public class SuperVideoPlayer extends RelativeLayout {
                     String local = data.getString(KEY_PATH);
 
                     if (mNowPlayVideo.getPlayUrl().getUrl().equals(local)) {
-
-
                         Uri uri = Uri.parse(local);
                         mSuperVideoView.setVideoURI(uri);
                         mSuperVideoView.setVisibility(VISIBLE);
                         startPlayVideo(0);
                         LogUtil.d(TAG, "url:" + url + " path:" + local);
                     }
-
+                    break;
+                case MSG_FILE_DOWNLOAD_FAILED:
+                    // TODO: play from the Internet
                 default:
                     break;
             }
