@@ -23,8 +23,6 @@ import com.shane.android.videoplayer.bean.VideoUrl;
 import com.shane.android.videoplayer.engine.DLNAContainer;
 import com.shane.android.videoplayer.engine.MultiPointController;
 import com.shane.android.videoplayer.interf.IController;
-import com.shane.android.videoplayer.util.DeviceUtil;
-import com.shane.android.videoplayer.util.FileUtil;
 import com.shane.android.videoplayer.util.LogUtil;
 
 import org.cybergarage.upnp.Device;
@@ -492,19 +490,10 @@ public class SuperVideoPlayer extends RelativeLayout {
         }
         mSuperVideoView.setOnPreparedListener(mOnPreparedListener);
         if (videoUrl.isOnlineVideo()) {
-//            String dest = mContext.getFilesDir().getAbsolutePath() + "/" + TEMP_FILE;
-//            boolean downloaded = FileUtil.downLoadFile(mContext, videoUrl.getUrl(), dest);
-//            if (!downloaded) {
-//                LogUtil.e(TAG, "download file error, url: " + videoUrl.getUrl());
-//                return;
-//            }
-//            videoUrl.setIsOnlineVideo(false);
-//            videoUrl.setFormatUrl(dest);
-//            // mSuperVideoView.setVideoPath(videoUrl.getUrl());
+            mHandler.obtainMessage(MSG_FILE_DOWNLOAD_ING).sendToTarget();
         } else {
             Uri uri = Uri.parse(videoUrl.getUrl());
             mSuperVideoView.setVideoURI(uri);
-
             mSuperVideoView.setVisibility(VISIBLE);
             startPlayVideo(seekTime);
         }
