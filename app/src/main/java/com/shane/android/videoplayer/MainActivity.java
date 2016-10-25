@@ -14,9 +14,12 @@ import android.widget.Toast;
 import com.shane.android.videoplayer.bean.Video;
 import com.shane.android.videoplayer.bean.VideoUrl;
 import com.shane.android.videoplayer.engine.DLNAContainer;
+import com.shane.android.videoplayer.engine.MP4HeaderCoder;
 import com.shane.android.videoplayer.service.DLNAService;
 import com.shane.android.videoplayer.util.DensityUtil;
+import com.shane.android.videoplayer.util.FileUtil;
 import com.shane.android.videoplayer.util.LogUtil;
+import com.shane.android.videoplayer.util.MD5Util;
 import com.shane.android.videoplayer.widget.MediaController;
 import com.shane.android.videoplayer.widget.SuperVideoPlayer;
 
@@ -26,6 +29,7 @@ import org.wlf.filedownloader.base.Status;
 import org.wlf.filedownloader.listener.OnFileDownloadStatusListener;
 import org.wlf.filedownloader.listener.simple.OnSimpleFileDownloadStatusListener;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -35,8 +39,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private SuperVideoPlayer mSuperVideoPlayer;
     private View mPlayBtnView;
-    String remote2 = "http://114.55.231.90:1987/static/public/MP4/we.mp4";
-    String remote = "http://114.55.231.90:1987/static/public/MP4/test1.mp4";
+    String remote = "http://114.55.231.90:1987/static/public/MP4/we.mp4";
+    String remote2 = "http://114.55.231.90:1987/static/public/MP4/test1.mp4";
     String local = "/sdcard/test2.mp4";
     private HashMap<String, ArrayList<VideoUrl>> mapUrlVideo = new HashMap<String, ArrayList<VideoUrl>>();
 
@@ -200,62 +204,95 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private OnFileDownloadStatusListener mOnFileDownloadStatusListener = new OnSimpleFileDownloadStatusListener() {
         @Override
         public void onFileDownloadStatusRetrying(DownloadFileInfo downloadFileInfo, int retryTimes) {
-            // retrying download when failed once, the retryTimes is the current trying times
+
         }
+
         @Override
         public void onFileDownloadStatusWaiting(DownloadFileInfo downloadFileInfo) {
             // waiting for download(wait for other tasks paused, or FileDownloader is busy for other operations)
         }
+
         @Override
         public void onFileDownloadStatusPreparing(DownloadFileInfo downloadFileInfo) {
             long fileSize = downloadFileInfo.getFileSizeLong();
+            final String url = downloadFileInfo.getUrl();
+
             LogUtil.d(TAG, "size, onFileDownloadStatusPreparing:" + fileSize);
-            if (fileSize > AppContext.MAX_CACHE_FILE_SIZE) {
-                final String url = downloadFileInfo.getUrl();
-                FileDownloader.pause(url);
-            }
+
+            boolean pause = false;
+            if (fileSize > AppContext.MAX_CACHE_FILE_SIZE) pause = true;
+            String encodeFile = AppContext.getEncodeFile(url);
+            if (FileUtil.fileExists(encodeFile)) pause = true;
+            if (pause) FileDownloader.pause(url);
+            LogUtil.d(TAG, "onFileDownloadStatusPreparing, encodeFile:" + encodeFile);
         }
+
         @Override
         public void onFileDownloadStatusPrepared(DownloadFileInfo downloadFileInfo) {
             // prepared(connected)
             LogUtil.d(TAG, "size, onFileDownloadStatusPrepared:" + downloadFileInfo.getFileSizeLong());
         }
+
         @Override
         public void onFileDownloadStatusDownloading(DownloadFileInfo downloadFileInfo, float downloadSpeed, long
                 remainingTime) {
             // downloading, the downloadSpeed with KB/s unit, the remainingTime with seconds unit
         }
+
         @Override
         public void onFileDownloadStatusPaused(DownloadFileInfo downloadFileInfo) {
             // download paused
         }
+
         @Override
         public void onFileDownloadStatusCompleted(DownloadFileInfo downloadFileInfo) {
-            final String url = downloadFileInfo.getUrl();
+            String url = downloadFileInfo.getUrl();
+            String path = null;
             int status = downloadFileInfo.getStatus();
             LogUtil.d(TAG, "onFileDownloadStatusCompleted:" + status);
-            if (status != Status.DOWNLOAD_STATUS_COMPLETED) {
+
+            String encodeFile = AppContext.getEncodeFile(url);
+            LogUtil.d(TAG, "onFileDownloadStatusCompleted:encodeFile" + encodeFile);
+            if (FileUtil.fileExists(encodeFile)) {
+                path = encodeFile;
+            } else if (status != Status.DOWNLOAD_STATUS_COMPLETED) {
                 Toast.makeText(MainActivity.this, "DOWNLOAD_STATUS:"+status, Toast.LENGTH_SHORT).show();
                 FileDownloader.reStart(url);
                 return;
             }
 
-            final String path = downloadFileInfo.getFilePath();
+            final String oldPath = downloadFileInfo.getFilePath();
 
             // download completed(the url file has been finished)
             ArrayList<VideoUrl> urls = mapUrlVideo.get(url);
             if (urls == null || urls.size() == 0) {
                 return;
             } else {
-                Toast.makeText(MainActivity.this, "downloadFileInfo:"+path, Toast.LENGTH_SHORT).show();
+                Toast.makeText(MainActivity.this, "downloadFileInfo:"+oldPath, Toast.LENGTH_SHORT).show();
+                if (path == null) {
+                    path = encodeFile;
+                    MP4HeaderCoder mp4 = new MP4HeaderCoder(oldPath);
+                    byte[] encodeData = mp4.getEncodeBytes(mp4.getRawBytes());
+                    FileUtil.saveFileString(path, encodeData);
+                }
+
+                MP4HeaderCoder mp4 = new MP4HeaderCoder(path);
+                byte[] decodeData = mp4.getDecodeBytes(mp4.getRawBytes());
+                path = oldPath + "_decode.mp4";
+                FileUtil.saveFileString(path, decodeData);
+
+                path = oldPath;
                 for (VideoUrl vu: urls) {
                     vu.setIsDownloaded(true, path);
                 }
-                LogUtil.d(TAG, "notifyFileDownloaderStatus---1");
-                mSuperVideoPlayer.notifyFileDownloaderStatus(url, true, path);
-            }
 
+                mSuperVideoPlayer.notifyFileDownloaderStatus(url, true, path);
+
+                LogUtil.d(TAG, "notifyFileDownloaderStatus---1");
+            }
         }
+
+
         @Override
         public void onFileDownloadStatusFailed(String url, DownloadFileInfo downloadFileInfo, FileDownloadStatusFailReason failReason) {
             // error occur, see failReason for details, some of the failReason you must concern

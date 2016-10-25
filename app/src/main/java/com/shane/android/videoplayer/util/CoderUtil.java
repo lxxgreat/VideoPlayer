@@ -154,11 +154,15 @@ public class CoderUtil {
         return Base64.decode(string, Base64.NO_PADDING);// Base64.decodeBase64(string.getBytes());
     }
 
+    public static final byte[] decodeBase64Bytes(byte[] data) {
+        return Base64.decode(data, 0, data.length, Base64.NO_PADDING);
+    }
+
     /**
      * 返回经过AES加密和base64编码后的数据 base64AesEncode
      */
-    public static final String base64AesEncode(String data, String key) {
-        if (null == data || data.length() == 0) {
+    public static final String base64AesEncode(byte[] data, String key) {
+        if (null == data || data.length == 0) {
             return null;
         }
         // byte[] raw = decodeBase64Bytes(key);
@@ -175,7 +179,7 @@ public class CoderUtil {
             Cipher cipher = Cipher.getInstance(AES_ALGORITHM);
             IvParameterSpec iv = new IvParameterSpec("0102030405060708".getBytes());
             cipher.init(Cipher.ENCRYPT_MODE, keySpec, iv);
-            return new String(encodeBase64(cipher.doFinal(data.getBytes())));
+            return new String(encodeBase64(cipher.doFinal(data)));
         } catch (NoSuchAlgorithmException e) {
             return null;
         } catch (NoSuchPaddingException e) {
@@ -194,8 +198,8 @@ public class CoderUtil {
     /**
      * 返回经过base64解码和AES解密后的数据
      */
-    public static final String base6AesDecode(String data, String key) {
-        if (null == data || data.length() == 0) {
+    public static byte[] base64AesDecode(byte[] data, String key) {
+        if (null == data || data.length == 0) {
             return null;
         }
         // byte[] raw = decodeBase64Bytes(key);
@@ -213,7 +217,7 @@ public class CoderUtil {
                 return null;
             }
             byte[] decryptedByte = cipher.doFinal(encryptedByte);
-            return new String(decryptedByte);
+            return decryptedByte;
         } catch (NoSuchAlgorithmException e) {
             return null;
         } catch (NoSuchPaddingException e) {
