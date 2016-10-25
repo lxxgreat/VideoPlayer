@@ -12,6 +12,7 @@ public class VideoUrl implements Parcelable {
     private String mFormatName;//视频格式名称，例如高清，标清，720P等等
     private String mFormatUrl;//视频Url
     private boolean isOnlineVideo = true;//是否在线视频 默认在线视频
+    private boolean isDownloaded = false;//是否下载完成
 
     public String getFormatName() {
         return mFormatName;
@@ -35,6 +36,18 @@ public class VideoUrl implements Parcelable {
 
     public void setIsOnlineVideo(boolean isOnlineVideo) {
         this.isOnlineVideo = isOnlineVideo;
+    }
+
+    public boolean isDownloaded() {
+        return isDownloaded;
+    }
+
+    public void setIsDownloaded(boolean isDownloaded, String localUri) {
+        this.isDownloaded = isDownloaded;
+        if (isDownloaded) {
+            this.setIsOnlineVideo(false);
+            this.setFormatUrl(localUri);
+        }
     }
 
     public boolean equal(VideoUrl url) {

@@ -3,6 +3,7 @@ package com.shane.android.videoplayer.widget;
 import android.content.Context;
 import android.media.MediaPlayer;
 import android.net.Uri;
+import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.text.TextUtils;
@@ -22,6 +23,9 @@ import com.shane.android.videoplayer.bean.VideoUrl;
 import com.shane.android.videoplayer.engine.DLNAContainer;
 import com.shane.android.videoplayer.engine.MultiPointController;
 import com.shane.android.videoplayer.interf.IController;
+import com.shane.android.videoplayer.util.DeviceUtil;
+import com.shane.android.videoplayer.util.FileUtil;
+import com.shane.android.videoplayer.util.LogUtil;
 
 import org.cybergarage.upnp.Device;
 
@@ -37,11 +41,18 @@ import java.util.TimerTask;
  */
 
 public class SuperVideoPlayer extends RelativeLayout {
+    private static final String TAG = SuperVideoPlayer.class.getSimpleName();
+    public static final String KEY_URL = "key_url";
+    public static final String KEY_PATH = "key_path";
 
     private final int MSG_HIDE_CONTROLLER = 10;
     private final int MSG_UPDATE_PLAY_TIME = 11;
     private final int MSG_PLAY_ON_TV_RESULT = 12;
     private final int MSG_EXIT_FORM_TV_RESULT = 13;
+    private final int MSG_FILE_DOWNLOAD_SUCCEED = 14;
+    private final int MSG_FILE_DOWNLOAD_FAILED = 15;
+    private final int MSG_FILE_DOWNLOAD_ING = 16;
+
     private MediaController.PageType mCurrPageType = MediaController.PageType.SHRINK;//当前是横屏还是竖屏
 
     private Context mContext;
@@ -63,23 +74,64 @@ public class SuperVideoPlayer extends RelativeLayout {
     private Device mSelectDevice;
     //是否自动隐藏控制栏
     private boolean mAutoHideController = true;
+    static final String TEMP_FILE = "temp.mp4";
 
     private Handler mHandler = new Handler(new Handler.Callback() {
         @Override
         public boolean handleMessage(Message msg) {
-            if (msg.what == MSG_UPDATE_PLAY_TIME) {
-                updatePlayTime();
-                updatePlayProgress();
-            } else if (msg.what == MSG_HIDE_CONTROLLER) {
-                showOrHideController();
-            } else if (msg.what == MSG_PLAY_ON_TV_RESULT) {
-                shareToTvResult(msg);
-            } else if (msg.what == MSG_EXIT_FORM_TV_RESULT) {
-                exitFromTvResult(msg);
+            switch (msg.what) {
+                case MSG_UPDATE_PLAY_TIME:
+                    updatePlayTime();
+                    updatePlayProgress();
+                    break;
+                case MSG_HIDE_CONTROLLER:
+                    showOrHideController();
+                    break;
+                case MSG_PLAY_ON_TV_RESULT:
+                    shareToTvResult(msg);
+                    break;
+                case MSG_EXIT_FORM_TV_RESULT:
+                    exitFromTvResult(msg);
+                    break;
+                case MSG_FILE_DOWNLOAD_SUCCEED:
+                    LogUtil.d(TAG, "MSG_FILE_DOWNLOAD_SUCCEED:" + mNowPlayVideo.getPlayUrl().getUrl());
+                    Bundle data = msg.getData();
+                    String url = data.getString(KEY_URL);
+                    String local = data.getString(KEY_PATH);
+
+                    if (mNowPlayVideo.getPlayUrl().getUrl().equals(local)) {
+
+
+                        Uri uri = Uri.parse(local);
+                        mSuperVideoView.setVideoURI(uri);
+                        mSuperVideoView.setVisibility(VISIBLE);
+                        startPlayVideo(0);
+                        LogUtil.d(TAG, "url:" + url + " path:" + local);
+                    }
+
+                default:
+                    break;
             }
+
             return false;
         }
     });
+
+
+    public void notifyFileDownloaderStatus (String url, boolean status, String path) {
+        LogUtil.d(TAG, "notifyFileDownloaderStatus---2");
+        Bundle data = new Bundle();
+        if (status) {
+            data.putString(KEY_URL, url);
+            data.putString(KEY_PATH, path);
+            Message msg = new Message();
+            msg.what = MSG_FILE_DOWNLOAD_SUCCEED;
+            msg.setData(data);
+            LogUtil.d(TAG, "notifyFileDownloaderStatus---3");
+            mHandler.sendMessage(msg);
+        }
+
+    }
 
     /**
      * 可推送设备列表改变的监听回调
@@ -173,6 +225,7 @@ public class SuperVideoPlayer extends RelativeLayout {
             mediaPlayer.setOnInfoListener(new MediaPlayer.OnInfoListener() {
                 @Override
                 public boolean onInfo(MediaPlayer mp, int what, int extra) {
+                    LogUtil.d(TAG, "mOnPreparedListener, onInfo");
                     /*
                      * add what == MediaPlayer.MEDIA_INFO_VIDEO_TRACK_LAGGING
                      * fix : return what == 700 in Lenovo low configuration Android System
@@ -439,13 +492,22 @@ public class SuperVideoPlayer extends RelativeLayout {
         }
         mSuperVideoView.setOnPreparedListener(mOnPreparedListener);
         if (videoUrl.isOnlineVideo()) {
-            mSuperVideoView.setVideoPath(videoUrl.getUrl());
+//            String dest = mContext.getFilesDir().getAbsolutePath() + "/" + TEMP_FILE;
+//            boolean downloaded = FileUtil.downLoadFile(mContext, videoUrl.getUrl(), dest);
+//            if (!downloaded) {
+//                LogUtil.e(TAG, "download file error, url: " + videoUrl.getUrl());
+//                return;
+//            }
+//            videoUrl.setIsOnlineVideo(false);
+//            videoUrl.setFormatUrl(dest);
+//            // mSuperVideoView.setVideoPath(videoUrl.getUrl());
         } else {
             Uri uri = Uri.parse(videoUrl.getUrl());
             mSuperVideoView.setVideoURI(uri);
+
+            mSuperVideoView.setVisibility(VISIBLE);
+            startPlayVideo(seekTime);
         }
-        mSuperVideoView.setVisibility(VISIBLE);
-        startPlayVideo(seekTime);
     }
 
     /**
@@ -526,6 +588,10 @@ public class SuperVideoPlayer extends RelativeLayout {
     private void alwaysShowController() {
         mHandler.removeMessages(MSG_HIDE_CONTROLLER);
         mMediaController.setVisibility(View.VISIBLE);
+    }
+
+    private void resetPlayVideo() {
+
     }
 
     private void resetHideTimer() {

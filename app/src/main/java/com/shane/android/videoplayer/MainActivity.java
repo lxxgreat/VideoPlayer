@@ -16,16 +16,28 @@ import com.shane.android.videoplayer.bean.VideoUrl;
 import com.shane.android.videoplayer.engine.DLNAContainer;
 import com.shane.android.videoplayer.service.DLNAService;
 import com.shane.android.videoplayer.util.DensityUtil;
+import com.shane.android.videoplayer.util.LogUtil;
 import com.shane.android.videoplayer.widget.MediaController;
 import com.shane.android.videoplayer.widget.SuperVideoPlayer;
 
+import org.wlf.filedownloader.DownloadFileInfo;
+import org.wlf.filedownloader.FileDownloader;
+import org.wlf.filedownloader.listener.OnFileDownloadStatusListener;
+import org.wlf.filedownloader.listener.simple.OnSimpleFileDownloadStatusListener;
+
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
+    private static final String TAG = MainActivity.class.getSimpleName();
+
     private SuperVideoPlayer mSuperVideoPlayer;
     private View mPlayBtnView;
+    String remote2 = "http://114.55.231.90:1987/static/public/MP4/we.mp4";
     String remote = "http://114.55.231.90:1987/static/public/MP4/test1.mp4";
     String local = "/sdcard/test2.mp4";
+    private HashMap<String, ArrayList<VideoUrl>> mapUrlVideo = new HashMap<String, ArrayList<VideoUrl>>();
 
     private SuperVideoPlayer.VideoPlayCallbackImpl mVideoPlayCallback = new SuperVideoPlayer.VideoPlayCallbackImpl() {
         @Override
@@ -71,6 +83,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         arrayList1.add(videoUrl2);
         video.setVideoName("remote");
         video.setVideoUrl(arrayList1);
+        mapUrlVideo.put(remote, arrayList1);
 
         Video video2 = new Video();
         VideoUrl videoUrl3 = new VideoUrl();
@@ -88,8 +101,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         video2.setVideoUrl(arrayList2);
 
         ArrayList<Video> videoArrayList = new ArrayList<>();
-        videoArrayList.add(video2);
         videoArrayList.add(video);
+        videoArrayList.add(video2);
+        FileDownloader.start(remote);
 
         mSuperVideoPlayer.loadMultipleVideo(videoArrayList,0,0,0);
     }
@@ -104,6 +118,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     protected void onDestroy() {
         super.onDestroy();
         stopDLNAService();
+        // pause all downloads
+        FileDownloader.pauseAll();
+        // unregisterDownloadStatusListener
+        FileDownloader.unregisterDownloadStatusListener(mOnFileDownloadStatusListener);
     }
 
     /***
@@ -149,6 +167,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         mPlayBtnView = findViewById(R.id.play_btn);
         mPlayBtnView.setOnClickListener(this);
         mSuperVideoPlayer.setVideoPlayCallback(mVideoPlayCallback);
+
+        FileDownloader.registerDownloadStatusListener(mOnFileDownloadStatusListener);
+        mapUrlVideo.clear();
         startDLNAService();
     }
 
@@ -173,4 +194,77 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         Intent intent = new Intent(getApplicationContext(), DLNAService.class);
         stopService(intent);
     }
+
+    private OnFileDownloadStatusListener mOnFileDownloadStatusListener = new OnSimpleFileDownloadStatusListener() {
+        @Override
+        public void onFileDownloadStatusRetrying(DownloadFileInfo downloadFileInfo, int retryTimes) {
+            // retrying download when failed once, the retryTimes is the current trying times
+        }
+        @Override
+        public void onFileDownloadStatusWaiting(DownloadFileInfo downloadFileInfo) {
+            // waiting for download(wait for other tasks paused, or FileDownloader is busy for other operations)
+        }
+        @Override
+        public void onFileDownloadStatusPreparing(DownloadFileInfo downloadFileInfo) {
+            // preparing(connecting)
+        }
+        @Override
+        public void onFileDownloadStatusPrepared(DownloadFileInfo downloadFileInfo) {
+            // prepared(connected)
+        }
+        @Override
+        public void onFileDownloadStatusDownloading(DownloadFileInfo downloadFileInfo, float downloadSpeed, long
+                remainingTime) {
+            // downloading, the downloadSpeed with KB/s unit, the remainingTime with seconds unit
+        }
+        @Override
+        public void onFileDownloadStatusPaused(DownloadFileInfo downloadFileInfo) {
+            // download paused
+        }
+        @Override
+        public void onFileDownloadStatusCompleted(DownloadFileInfo downloadFileInfo) {
+            final String url = downloadFileInfo.getUrl();
+            final String path = downloadFileInfo.getFilePath();
+
+            // download completed(the url file has been finished)
+            ArrayList<VideoUrl> urls = mapUrlVideo.get(url);
+            if (urls == null || urls.size() == 0) {
+                return;
+            } else {
+                Toast.makeText(MainActivity.this, "downloadFileInfo:"+path, Toast.LENGTH_SHORT).show();
+                for (VideoUrl vu: urls) {
+                    vu.setIsDownloaded(true, path);
+                }
+                LogUtil.d(TAG, "notifyFileDownloaderStatus---1");
+                mSuperVideoPlayer.notifyFileDownloaderStatus(url, true, path);
+            }
+
+        }
+        @Override
+        public void onFileDownloadStatusFailed(String url, DownloadFileInfo downloadFileInfo, FileDownloadStatusFailReason failReason) {
+            // error occur, see failReason for details, some of the failReason you must concern
+
+            String failType = failReason.getType();
+            String failUrl = failReason.getUrl();// or failUrl = url, both url and failReason.getUrl() are the same
+
+            if(FileDownloadStatusFailReason.TYPE_URL_ILLEGAL.equals(failType)){
+                // the url error when downloading file with failUrl
+            }else if(FileDownloadStatusFailReason.TYPE_STORAGE_SPACE_IS_FULL.equals(failType)){
+                // storage space is full when downloading file with failUrl
+            }else if(FileDownloadStatusFailReason.TYPE_NETWORK_DENIED.equals(failType)){
+                // network access denied when downloading file with failUrl
+            }else if(FileDownloadStatusFailReason.TYPE_NETWORK_TIMEOUT.equals(failType)){
+                // connect timeout when downloading file with failUrl
+            }else{
+                // more....
+            }
+
+            // exception details
+            Throwable failCause = failReason.getCause();// or failReason.getOriginalCause()
+
+            // also you can see the exception message
+            String failMsg = failReason.getMessage();// or failReason.getOriginalCause().getMessage()
+        }
+    };
+
 }
