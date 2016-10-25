@@ -3,9 +3,8 @@ package com.shane.android.videoplayer;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
-import android.os.SystemClock;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
@@ -19,7 +18,6 @@ import com.shane.android.videoplayer.service.DLNAService;
 import com.shane.android.videoplayer.util.DensityUtil;
 import com.shane.android.videoplayer.util.FileUtil;
 import com.shane.android.videoplayer.util.LogUtil;
-import com.shane.android.videoplayer.util.MD5Util;
 import com.shane.android.videoplayer.widget.MediaController;
 import com.shane.android.videoplayer.widget.SuperVideoPlayer;
 
@@ -29,18 +27,17 @@ import org.wlf.filedownloader.base.Status;
 import org.wlf.filedownloader.listener.OnFileDownloadStatusListener;
 import org.wlf.filedownloader.listener.simple.OnSimpleFileDownloadStatusListener;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
     private static final String TAG = MainActivity.class.getSimpleName();
 
     private SuperVideoPlayer mSuperVideoPlayer;
     private View mPlayBtnView;
-    String remote = "http://114.55.231.90:1987/static/public/MP4/we.mp4";
-    String remote2 = "http://114.55.231.90:1987/static/public/MP4/test1.mp4";
+    String remote1 = "http://114.55.231.90:1987/static/public/MP4/test1.mp4";
+    String remote2 = "http://114.55.231.90:1987/static/public/MP4/test2.mp4";
+    String remote3 = "http://114.55.231.90:1987/static/public/MP4/test3.mp4";
     String local = "/sdcard/test2.mp4";
     private HashMap<String, ArrayList<VideoUrl>> mapUrlVideo = new HashMap<String, ArrayList<VideoUrl>>();
 
@@ -87,45 +84,36 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         startDLNAService();
     }
 
+    private Video addUrl(String url, String name) {
+        Video video = new Video();
+        VideoUrl videoUrl1 = new VideoUrl();
+        videoUrl1.setFormatName("720P");
+        videoUrl1.setFormatUrl(url);
+        VideoUrl videoUrl2 = new VideoUrl();
+        videoUrl2.setFormatName("480P");
+        videoUrl2.setFormatUrl(url);
+        ArrayList<VideoUrl> arrayList1 = new ArrayList<>();
+        arrayList1.add(videoUrl1);
+        arrayList1.add(videoUrl2);
+        video.setVideoName(name);
+        video.setVideoUrl(arrayList1);
+        mapUrlVideo.put(url, arrayList1);
+
+        return video;
+    }
+
     @Override
     public void onClick(View view) {
         mPlayBtnView.setVisibility(View.GONE);
         mSuperVideoPlayer.setVisibility(View.VISIBLE);
         mSuperVideoPlayer.setAutoHideController(true);
 
-        Video video = new Video();
-        VideoUrl videoUrl1 = new VideoUrl();
-        videoUrl1.setFormatName("720P");
-        videoUrl1.setFormatUrl(remote);
-        VideoUrl videoUrl2 = new VideoUrl();
-        videoUrl2.setFormatName("480P");
-        videoUrl2.setFormatUrl(remote);
-        ArrayList<VideoUrl> arrayList1 = new ArrayList<>();
-        arrayList1.add(videoUrl1);
-        arrayList1.add(videoUrl2);
-        video.setVideoName("remote");
-        video.setVideoUrl(arrayList1);
-        mapUrlVideo.put(remote, arrayList1);
-
-        Video video2 = new Video();
-        VideoUrl videoUrl3 = new VideoUrl();
-        videoUrl3.setIsOnlineVideo(false);
-        videoUrl3.setFormatName("720P");
-        videoUrl3.setFormatUrl(local);
-        VideoUrl videoUrl4 = new VideoUrl();
-        videoUrl4.setIsOnlineVideo(false);
-        videoUrl4.setFormatName("480P");
-        videoUrl4.setFormatUrl(local);
-        ArrayList<VideoUrl> arrayList2 = new ArrayList<>();
-        arrayList2.add(videoUrl3);
-        arrayList2.add(videoUrl4);
-        video2.setVideoName("local");
-        video2.setVideoUrl(arrayList2);
-
         ArrayList<Video> videoArrayList = new ArrayList<>();
-        videoArrayList.add(video);
-        videoArrayList.add(video2);
-        FileDownloader.start(remote);
+
+        videoArrayList.add(addUrl(remote2, "test2"));
+        videoArrayList.add(addUrl(remote3, "test3"));
+        videoArrayList.add(addUrl(remote1, "test1"));
+        FileDownloader.start(remote2);
 
         mSuperVideoPlayer.loadMultipleVideo(videoArrayList,0,0,0);
     }
@@ -281,7 +269,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 path = oldPath + "_decode.mp4";
                 FileUtil.saveFileString(path, decodeData);
 
-                path = oldPath;
+//                path = oldPath;
                 for (VideoUrl vu: urls) {
                     vu.setIsDownloaded(true, path);
                 }

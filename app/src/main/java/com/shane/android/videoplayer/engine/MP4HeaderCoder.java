@@ -19,7 +19,7 @@ public class MP4HeaderCoder implements IFileCoder {
 
     private static final String DECODE_KEY = "d101b17c77ff93cs";
     private static final int ENCODER_BYTES = 16; // AES128
-    int mDecodeBytes = 43; // AES128
+    int mDecodeBytes = 44; // AES128
 
     String mSouceFile;
     byte[] mRawBytes;
@@ -40,14 +40,15 @@ public class MP4HeaderCoder implements IFileCoder {
         byte[] temp = baos.toByteArray();
         LogUtil.d(TAG, "getEncodeBytes========temp.length:" + temp.length);
         LogUtil.d(TAG, "HexString========:" + HexUtil.toHexString(temp));
-        String encoder = CoderUtil.base64AesEncode(temp, DECODE_KEY);
-        mDecodeBytes = encoder.length();
-        LogUtil.d(TAG, "encoder========:" + encoder);
+        byte[] res = CoderUtil.base64AesEncode(temp, DECODE_KEY);
+        LogUtil.d(TAG, "HexString2========:" + HexUtil.toHexString(res));
+        mDecodeBytes = res.length;
+        LogUtil.d(TAG, "mDecodeBytes========:" + mDecodeBytes);
         baos = null;
         baos = new ByteArrayOutputStream();
         int remain = data.length-ENCODER_BYTES;
         try {
-            baos.write(encoder.getBytes());
+            baos.write(res);
             baos.write(data, ENCODER_BYTES, remain);
             ret = baos.toByteArray();
         } catch (Exception e) {
@@ -68,7 +69,8 @@ public class MP4HeaderCoder implements IFileCoder {
         byte[] temp = CoderUtil.base64AesDecode(baos.toByteArray(), DECODE_KEY);
         String decoder = HexUtil.toHexString(temp);
         LogUtil.d(TAG, "decoder========:" + decoder);
-        baos.reset();
+        baos = null;
+        baos = new ByteArrayOutputStream();
         int remain = data.length - mDecodeBytes;
         try {
             baos.write(temp);

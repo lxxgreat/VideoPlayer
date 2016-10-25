@@ -161,7 +161,7 @@ public class CoderUtil {
     /**
      * 返回经过AES加密和base64编码后的数据 base64AesEncode
      */
-    public static final String base64AesEncode(byte[] data, String key) {
+    public static final byte[] base64AesEncode(byte[] data, String key) {
         if (null == data || data.length == 0) {
             return null;
         }
@@ -179,7 +179,7 @@ public class CoderUtil {
             Cipher cipher = Cipher.getInstance(AES_ALGORITHM);
             IvParameterSpec iv = new IvParameterSpec("0102030405060708".getBytes());
             cipher.init(Cipher.ENCRYPT_MODE, keySpec, iv);
-            return new String(encodeBase64(cipher.doFinal(data)));
+            return encodeBase64(cipher.doFinal(data));
         } catch (NoSuchAlgorithmException e) {
             return null;
         } catch (NoSuchPaddingException e) {

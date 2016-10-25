@@ -24,7 +24,7 @@ import java.io.File;
 public class AppContext extends Application {
     private static final String TAG = AppContext.class.getSimpleName();
 
-    public static final int MAX_CACHE_FILE_SIZE = 1024 * 1024 * 200; // 200MB
+    public static final int MAX_CACHE_FILE_SIZE = 1024 * 1024 * 20; // 20MB
     private static Context sContext;
     private static Resources sResource;
     private HttpProxyCacheServer mProxy;
@@ -109,7 +109,8 @@ public class AppContext extends Application {
     private void test() {
         String coder = "lxxgreatlxxgreat";
         String DECODE_KEY = "d101b17c77ff93cs";
-        String encoder = CoderUtil.base64AesEncode(coder.getBytes(), DECODE_KEY);
+        byte[] data = CoderUtil.base64AesEncode(coder.getBytes(), DECODE_KEY);
+        String encoder = new String(data);
         LogUtil.d(TAG, "coder==" + coder + " \t======length:" + coder.length());
         LogUtil.d(TAG, "encoder========:" + encoder);
 
