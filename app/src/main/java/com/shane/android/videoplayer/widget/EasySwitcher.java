@@ -33,8 +33,6 @@ public class EasySwitcher extends LinearLayout {
 
     private EasySwitcherCallbackImpl mEasySwitcherCallback;
 
-
-
     public EasySwitcher(Context context) {
         super(context);
         mContext = context;
@@ -166,7 +164,6 @@ public class EasySwitcher extends LinearLayout {
 
     public interface EasySwitcherCallbackImpl{
         void onSelectItem(int position, String name);
-
         void onShowList();
     }
 }

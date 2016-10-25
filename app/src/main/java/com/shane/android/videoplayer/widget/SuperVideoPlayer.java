@@ -26,6 +26,7 @@ import com.shane.android.videoplayer.interf.IController;
 import com.shane.android.videoplayer.util.LogUtil;
 
 import org.cybergarage.upnp.Device;
+import org.wlf.filedownloader.FileDownloader;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -106,7 +107,22 @@ public class SuperVideoPlayer extends RelativeLayout {
                     }
                     break;
                 case MSG_FILE_DOWNLOAD_FAILED:
-                    // TODO: play from the Internet
+                    LogUtil.d(TAG, "MSG_FILE_DOWNLOAD_FAILED:" + mNowPlayVideo.getPlayUrl().getUrl());
+                    Bundle data2 = msg.getData();
+                    String url2 = data2.getString(KEY_URL);
+                    String local2 = data2.getString(KEY_PATH);
+
+                    if (mNowPlayVideo.getPlayUrl().getUrl().equals(url2)) {
+                        mSuperVideoView.setVideoPath(url2);
+                        mSuperVideoView.setVisibility(VISIBLE);
+                        startPlayVideo(0);
+                        LogUtil.d(TAG, "url2:" + url2 + " path:" + local2);
+                    }
+                    break;
+                case MSG_FILE_DOWNLOAD_ING:
+                    FileDownloader.start(mNowPlayVideo.getPlayUrl().getUrl());
+                    break;
+
                 default:
                     break;
             }
@@ -119,16 +135,12 @@ public class SuperVideoPlayer extends RelativeLayout {
     public void notifyFileDownloaderStatus (String url, boolean status, String path) {
         LogUtil.d(TAG, "notifyFileDownloaderStatus---2");
         Bundle data = new Bundle();
-        if (status) {
-            data.putString(KEY_URL, url);
-            data.putString(KEY_PATH, path);
-            Message msg = new Message();
-            msg.what = MSG_FILE_DOWNLOAD_SUCCEED;
-            msg.setData(data);
-            LogUtil.d(TAG, "notifyFileDownloaderStatus---3");
-            mHandler.sendMessage(msg);
-        }
-
+        data.putString(KEY_URL, url);
+        data.putString(KEY_PATH, path);
+        Message msg = new Message();
+        msg.setData(data);
+        msg.what = status ? MSG_FILE_DOWNLOAD_SUCCEED:MSG_FILE_DOWNLOAD_FAILED;
+        mHandler.sendMessage(msg);
     }
 
     /**
@@ -346,6 +358,7 @@ public class SuperVideoPlayer extends RelativeLayout {
         mNowPlayVideo.setPlayPos(selectFormat);
         mMediaController.initVideoList(mAllVideo);
         mMediaController.initPlayVideo(mNowPlayVideo);
+
         loadAndPlay(mNowPlayVideo.getPlayUrl(), seekTime);
     }
 

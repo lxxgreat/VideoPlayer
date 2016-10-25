@@ -113,7 +113,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         videoArrayList.add(addUrl(remote2, "test2"));
         videoArrayList.add(addUrl(remote3, "test3"));
         videoArrayList.add(addUrl(remote1, "test1"));
-        FileDownloader.start(remote2);
 
         mSuperVideoPlayer.loadMultipleVideo(videoArrayList,0,0,0);
     }
@@ -208,7 +207,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             LogUtil.d(TAG, "size, onFileDownloadStatusPreparing:" + fileSize);
 
             boolean pause = false;
-            if (fileSize > AppContext.MAX_CACHE_FILE_SIZE) pause = true;
+            if (fileSize > AppContext.MAX_CACHE_FILE_SIZE) {
+                mSuperVideoPlayer.notifyFileDownloaderStatus(url, false, "");
+                pause = true;
+            }
             String encodeFile = AppContext.getEncodeFile(url);
             if (FileUtil.fileExists(encodeFile)) pause = true;
             if (pause) FileDownloader.pause(url);
