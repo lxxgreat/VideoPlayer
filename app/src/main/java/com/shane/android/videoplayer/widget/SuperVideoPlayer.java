@@ -8,7 +8,6 @@ import android.os.Handler;
 import android.os.Message;
 import android.text.TextUtils;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.animation.Animation;
@@ -16,17 +15,17 @@ import android.view.animation.AnimationUtils;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
 
+import com.shane.android.videoplayer.AppContext;
 import com.shane.android.videoplayer.R;
 import com.shane.android.videoplayer.bean.Video;
 import com.shane.android.videoplayer.bean.VideoUrl;
 import com.shane.android.videoplayer.interf.IController;
+import com.shane.android.videoplayer.util.FileUtil;
 import com.shane.android.videoplayer.util.LogUtil;
 
-import org.cybergarage.upnp.Device;
 import org.wlf.filedownloader.FileDownloader;
 
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -41,14 +40,14 @@ public class SuperVideoPlayer extends RelativeLayout {
     public static final String KEY_URL = "key_url";
     public static final String KEY_PATH = "key_path";
 
-    private final int MSG_HIDE_CONTROLLER = 10;
-    private final int MSG_UPDATE_PLAY_TIME = 11;
-    private final int MSG_EXIT_FORM_TV_RESULT = 13;
-    private final int MSG_FILE_DOWNLOAD_SUCCEED = 14;
-    private final int MSG_FILE_DOWNLOAD_FAILED = 15;
-    private final int MSG_FILE_DOWNLOAD_ING = 16;
+    private final int MSG_HIDE_CONTROLLER = 0x01;
+    private final int MSG_UPDATE_PLAY_TIME = 0x02;
+    private final int MSG_FILE_DOWNLOAD_SUCCEED = 0x04;
+    private final int MSG_FILE_DOWNLOAD_FAILED = 0x08;
+    private final int MSG_FILE_DOWNLOAD_ING = 0x0F;
 
-    private MediaController.PageType mCurrPageType = MediaController.PageType.SHRINK;//当前是横屏还是竖屏
+    //当前是横屏还是竖屏
+    private MediaController.PageType mCurrPageType = MediaController.PageType.SHRINK;
 
     private Context mContext;
     private SuperVideoView mSuperVideoView;
@@ -64,9 +63,7 @@ public class SuperVideoPlayer extends RelativeLayout {
     private ArrayList<Video> mAllVideo;
     private Video mNowPlayVideo;
 
-    private List<Device> mDevices;
     private IController mController;
-    private Device mSelectDevice;
     //是否自动隐藏控制栏
     private boolean mAutoHideController = true;
 
@@ -231,6 +228,7 @@ public class SuperVideoPlayer extends RelativeLayout {
             stopHideTimer(true);
             mMediaController.playFinish(mSuperVideoView.getDuration());
             mVideoPlayCallback.onPlayFinish();
+            deleteDecodeFile();
             Toast.makeText(mContext, "视频播放完成", Toast.LENGTH_SHORT).show();
         }
     };
@@ -363,6 +361,13 @@ public class SuperVideoPlayer extends RelativeLayout {
         mSuperVideoView.pause();
         mSuperVideoView.stopPlayback();
         mSuperVideoView.setVisibility(GONE);
+        deleteDecodeFile();
+    }
+
+    private void deleteDecodeFile() {
+        if (!mNowPlayVideo.getPlayUrl().isOnlineVideo() && !AppContext.DEBUG) {
+            FileUtil.deleteFile(mNowPlayVideo.getPlayUrl().getUrl());
+        }
     }
 
     public boolean isAutoHideController() {
@@ -444,11 +449,11 @@ public class SuperVideoPlayer extends RelativeLayout {
      * @param videoUrl videoUrl
      */
     private void loadAndPlay(VideoUrl videoUrl, int seekTime) {
-        Log.e("TAG", "videoUrl:" + videoUrl);
+        LogUtil.e(TAG, "videoUrl:" + videoUrl);
         showProgressView(seekTime > 0);
         setCloseButton(true);
         if (TextUtils.isEmpty(videoUrl.getUrl())) {
-            Log.e("TAG", "videoUrl should not be null");
+            LogUtil.e(TAG, "videoUrl should not be null");
             return;
         }
         mSuperVideoView.setOnPreparedListener(mOnPreparedListener);
@@ -573,23 +578,6 @@ public class SuperVideoPlayer extends RelativeLayout {
 
     private void setController(IController controller) {
         mController = controller;
-    }
-
-    /**
-     * 继续在本地播放
-     */
-    private synchronized void goOnPlayAtLocal() {
-        showProgressView(true);
-        new Thread() {
-            @Override
-            public void run() {
-                final boolean isSuccess = mController.stop(mSelectDevice);
-                Message message = new Message();
-                message.what = MSG_EXIT_FORM_TV_RESULT;
-                message.arg1 = isSuccess ? 1 : 0;
-                mHandler.sendMessage(message);
-            }
-        }.start();
     }
 
     private class AnimationImp implements Animation.AnimationListener {

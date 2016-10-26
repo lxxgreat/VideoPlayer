@@ -4,7 +4,6 @@ import android.app.Application;
 import android.content.Context;
 import android.content.res.Resources;
 
-import com.danikula.videocache.HttpProxyCacheServer;
 import com.shane.android.videoplayer.util.CoderUtil;
 import com.shane.android.videoplayer.util.LogUtil;
 import com.shane.android.videoplayer.util.MD5Util;
@@ -24,11 +23,13 @@ import java.io.File;
 public class AppContext extends Application {
     private static final String TAG = AppContext.class.getSimpleName();
 
+    public static final boolean DEBUG = false;
     public static final int MAX_CACHE_FILE_SIZE = 1024 * 1024 * 20; // 20MB
+
     private static Context sContext;
     private static Resources sResource;
-    private HttpProxyCacheServer mProxy;
     public static String sCacheDir;
+
 
     @Override
     public void onCreate() {
@@ -44,15 +45,6 @@ public class AppContext extends Application {
         String md5 = MD5Util.getMd5DigestUpperCase(url);
         String encodeFile = AppContext.sCacheDir + File.separator + md5;
         return encodeFile;
-    }
-
-    public static HttpProxyCacheServer getProxy(Context context) {
-        AppContext app = (AppContext) context.getApplicationContext();
-        return app.mProxy == null ? (app.mProxy = app.newProxy()) : app.mProxy;
-    }
-
-    private HttpProxyCacheServer newProxy() {
-        return new HttpProxyCacheServer(this);
     }
 
     @Override
@@ -86,7 +78,6 @@ public class AppContext extends Application {
         FileDownloader.init(configuration);
     }
 
-    // release FileDownloader
     private void releaseFileDownloader() {
         FileDownloader.release();
     }

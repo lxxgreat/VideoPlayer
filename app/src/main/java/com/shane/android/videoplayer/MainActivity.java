@@ -36,7 +36,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     String remote2 = "http://114.55.231.90:1987/static/public/MP4/test2.mp4";
     String remote3 = "http://114.55.231.90:1987/static/public/MP4/test3.mp4";
 
-    private HashMap<String, ArrayList<VideoUrl>> mapUrlVideo = new HashMap<String, ArrayList<VideoUrl>>();
+    private HashMap<String, ArrayList<VideoUrl>> mMapUrlVideo = new HashMap<String, ArrayList<VideoUrl>>();
 
     private SuperVideoPlayer.VideoPlayCallbackImpl mVideoPlayCallback = new SuperVideoPlayer.VideoPlayCallbackImpl() {
         @Override
@@ -60,7 +60,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         @Override
         public void onPlayFinish() {
-
         }
     };
 
@@ -76,7 +75,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         mSuperVideoPlayer.setVideoPlayCallback(mVideoPlayCallback);
 
         FileDownloader.registerDownloadStatusListener(mOnFileDownloadStatusListener);
-        mapUrlVideo.clear();
+        mMapUrlVideo.clear();
     }
 
     private Video addUrl(String url, String name) {
@@ -92,13 +91,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         arrayList1.add(videoUrl2);
         video.setVideoName(name);
         video.setVideoUrl(arrayList1);
-        mapUrlVideo.put(url, arrayList1);
+        mMapUrlVideo.put(url, arrayList1);
 
         return video;
     }
 
     @Override
     public void onClick(View view) {
+        mMapUrlVideo.clear();
         mPlayBtnView.setVisibility(View.GONE);
         mSuperVideoPlayer.setVisibility(View.VISIBLE);
         mSuperVideoPlayer.setAutoHideController(true);
@@ -233,7 +233,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             final String oldPath = downloadFileInfo.getFilePath();
 
             // download completed(the url file has been finished)
-            ArrayList<VideoUrl> urls = mapUrlVideo.get(url);
+            ArrayList<VideoUrl> urls = mMapUrlVideo.get(url);
             if (urls == null || urls.size() == 0) {
                 return;
             } else {
@@ -254,7 +254,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 for (VideoUrl vu: urls) {
                     vu.setIsDownloaded(true, path);
                 }
-
+                // DONOT USE FileDownloader.delete
+                // FileDownloader.delete(url, true, null);
+                FileUtil.deleteFile(oldPath);
                 mSuperVideoPlayer.notifyFileDownloaderStatus(url, true, path);
 
                 LogUtil.d(TAG, "notifyFileDownloaderStatus---1");

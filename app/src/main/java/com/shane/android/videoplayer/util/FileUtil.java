@@ -127,6 +127,35 @@ public class FileUtil {
 
         File file = new File(filePath);
         return file.exists();
+    }
 
+    public static boolean deleteFile(File file) {
+        if (file == null) {
+            return false;
+        }
+
+        if (file.exists()) {
+            if (file.isDirectory()) {
+                File[] files = file.listFiles();
+                for (File toBeDeletedFile : files) {
+                    boolean deleted = deleteFile(toBeDeletedFile);
+                    if (!deleted) {
+                        return false;
+                    }
+                }
+                return file.delete();
+            } else {
+                return file.delete();
+            }
+        }
+        return false;
+    }
+
+    public static boolean deleteFile(String path) {
+        if (TextUtils.isEmpty(path)) {
+            return false;
+        }
+
+        return deleteFile(new File(path));
     }
 }
