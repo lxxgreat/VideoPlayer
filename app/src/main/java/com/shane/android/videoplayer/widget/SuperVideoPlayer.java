@@ -158,6 +158,8 @@ public class SuperVideoPlayer extends RelativeLayout {
         public void onSelectSrc(int position) {
             Video selectVideo = mAllVideo.get(position);
             if (selectVideo.equal(mNowPlayVideo)) return;
+            mSuperVideoView.pause();
+            mSuperVideoView.stopPlayback();
             mNowPlayVideo = selectVideo;
             mNowPlayVideo.setPlayPos(0);
             mMediaController.initPlayVideo(mNowPlayVideo);
