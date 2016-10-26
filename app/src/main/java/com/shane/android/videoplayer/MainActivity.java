@@ -35,6 +35,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     String remote1 = "http://114.55.231.90:1987/static/public/MP4/test1.mp4";
     String remote2 = "http://114.55.231.90:1987/static/public/MP4/test2.mp4";
     String remote3 = "http://114.55.231.90:1987/static/public/MP4/test3.mp4";
+    String remote4 = "http://114.55.231.90:1987/static/public/MP4/test4.qsv";
+    String remote5 = "http://114.55.231.90:1987/static/public/MP4/test5.3gp";
+    String remote6 = "http://114.55.231.90:1987/static/public/MP4/test6.avi";
 
     private HashMap<String, ArrayList<VideoUrl>> mMapUrlVideo = new HashMap<String, ArrayList<VideoUrl>>();
 
@@ -108,6 +111,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         videoArrayList.add(addUrl(remote2, "test2"));
         videoArrayList.add(addUrl(remote3, "test3"));
         videoArrayList.add(addUrl(remote1, "test1"));
+        videoArrayList.add(addUrl(remote4, "test4"));
+        videoArrayList.add(addUrl(remote5, "test5"));
+        videoArrayList.add(addUrl(remote6, "test6"));
 
         mSuperVideoPlayer.loadMultipleVideo(videoArrayList,0,0,0);
     }
