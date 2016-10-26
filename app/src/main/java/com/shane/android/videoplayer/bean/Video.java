@@ -8,11 +8,10 @@ import java.util.ArrayList;
  * @created 2016-10-23
  */
 public class Video {
-    private String mVideoName;//视频名称 如房源视频、小区视频
+    private String mVideoName;//视频名称
     private ArrayList<VideoUrl> mVideoUrl;//视频的地址列表
 
-    /***************请看注释***************************/
-    private VideoUrl mPlayUrl;//当前正在播放的地址。 外界不用传
+    private VideoUrl mPlayUrl;//当前正在播放的地址
 
     public String getVideoName() {
         return mVideoName;

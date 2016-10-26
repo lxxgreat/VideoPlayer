@@ -1,5 +1,7 @@
 package com.shane.android.videoplayer.coder;
 
+import android.os.SystemClock;
+
 import com.shane.android.videoplayer.interf.IFileCoder;
 import com.shane.android.videoplayer.util.CoderUtil;
 import com.shane.android.videoplayer.util.FileUtil;
@@ -34,16 +36,16 @@ public class MP4HeaderCoder implements IFileCoder {
         if (data == null) return null;
         if (data.length < ENCODER_BYTES) return data;
         byte[] ret = null;
+        long start = SystemClock.elapsedRealtime();
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         baos.write(data, 0, ENCODER_BYTES);
         byte[] temp = baos.toByteArray();
-        LogUtil.d(TAG, "getEncodeBytes========temp.length:" + temp.length);
         LogUtil.d(TAG, "HexString========:" + HexUtil.toHexString(temp));
         byte[] res = CoderUtil.base64AesEncode(temp, DECODE_KEY);
         LogUtil.d(TAG, "HexString2========:" + HexUtil.toHexString(res));
         mDecodeBytes = res.length;
-        LogUtil.d(TAG, "mDecodeBytes========:" + mDecodeBytes);
+        LogUtil.i(TAG, "mDecodeBytes========:" + mDecodeBytes);
         baos = null;
         baos = new ByteArrayOutputStream();
         int remain = data.length-ENCODER_BYTES;
@@ -55,6 +57,8 @@ public class MP4HeaderCoder implements IFileCoder {
             LogUtil.e(TAG, "getEncodeBytes", e);
         }
 
+        long duration = SystemClock.elapsedRealtime() - start;
+        LogUtil.d(TAG, "getEncodeBytes=====duration: " + duration + "ms");
         return ret;
     }
 
@@ -63,6 +67,7 @@ public class MP4HeaderCoder implements IFileCoder {
         if (data == null) return null;
         if (data.length < mDecodeBytes) return data;
         byte[] ret = null;
+        long start = SystemClock.elapsedRealtime();
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         baos.write(data, 0, mDecodeBytes);
@@ -79,6 +84,9 @@ public class MP4HeaderCoder implements IFileCoder {
         } catch (Exception e) {
             LogUtil.e(TAG, "getDecodeBytes", e);
         }
+
+        long duration = SystemClock.elapsedRealtime() - start;
+        LogUtil.d(TAG, "getDecodeBytes=====duration: " + duration + "ms");
         return ret;
     }
 
