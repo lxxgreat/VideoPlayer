@@ -14,14 +14,11 @@ import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.RelativeLayout;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.shane.android.videoplayer.R;
 import com.shane.android.videoplayer.bean.Video;
 import com.shane.android.videoplayer.bean.VideoUrl;
-import com.shane.android.videoplayer.engine.DLNAContainer;
-import com.shane.android.videoplayer.engine.MultiPointController;
 import com.shane.android.videoplayer.interf.IController;
 import com.shane.android.videoplayer.util.LogUtil;
 
@@ -46,7 +43,6 @@ public class SuperVideoPlayer extends RelativeLayout {
 
     private final int MSG_HIDE_CONTROLLER = 10;
     private final int MSG_UPDATE_PLAY_TIME = 11;
-    private final int MSG_PLAY_ON_TV_RESULT = 12;
     private final int MSG_EXIT_FORM_TV_RESULT = 13;
     private final int MSG_FILE_DOWNLOAD_SUCCEED = 14;
     private final int MSG_FILE_DOWNLOAD_FAILED = 15;
@@ -73,7 +69,6 @@ public class SuperVideoPlayer extends RelativeLayout {
     private Device mSelectDevice;
     //是否自动隐藏控制栏
     private boolean mAutoHideController = true;
-    static final String TEMP_FILE = "temp.mp4";
 
     private Handler mHandler = new Handler(new Handler.Callback() {
         @Override
@@ -85,12 +80,6 @@ public class SuperVideoPlayer extends RelativeLayout {
                     break;
                 case MSG_HIDE_CONTROLLER:
                     showOrHideController();
-                    break;
-                case MSG_PLAY_ON_TV_RESULT:
-                    shareToTvResult(msg);
-                    break;
-                case MSG_EXIT_FORM_TV_RESULT:
-                    exitFromTvResult(msg);
                     break;
                 case MSG_FILE_DOWNLOAD_SUCCEED:
                     LogUtil.d(TAG, "MSG_FILE_DOWNLOAD_SUCCEED:" + mNowPlayVideo.getPlayUrl().getUrl());
@@ -143,26 +132,11 @@ public class SuperVideoPlayer extends RelativeLayout {
         mHandler.sendMessage(msg);
     }
 
-    /**
-     * 可推送设备列表改变的监听回调
-     */
-    @SuppressWarnings("unused")
-    private DLNAContainer.DeviceChangeListener mDeviceChangeListener = new DLNAContainer.DeviceChangeListener() {
-        @Override
-        public void onDeviceChange(Device device) {
-
-        }
-    };
-
     private View.OnClickListener mOnClickListener = new OnClickListener() {
         @Override
         public void onClick(View view) {
             if (view.getId() == R.id.video_close_view) {
                 mVideoPlayCallback.onCloseVideo();
-            } else if (view.getId() == R.id.video_share_tv_view) {
-                shareToTv();
-            } else if (view.getId() == R.id.txt_dlna_exit) {
-                goOnPlayAtLocal();
             }
         }
     };
@@ -236,15 +210,11 @@ public class SuperVideoPlayer extends RelativeLayout {
                 @Override
                 public boolean onInfo(MediaPlayer mp, int what, int extra) {
                     LogUtil.d(TAG, "mOnPreparedListener, onInfo");
-                    /*
-                     * add what == MediaPlayer.MEDIA_INFO_VIDEO_TRACK_LAGGING
-                     * fix : return what == 700 in Lenovo low configuration Android System
-                     */
+
                     if (what == MediaPlayer.MEDIA_INFO_VIDEO_RENDERING_START
                             || what == MediaPlayer.MEDIA_INFO_VIDEO_TRACK_LAGGING) {
                         mProgressBarView.setVisibility(View.GONE);
                         setCloseButton(true);
-                        initDLNAInfo();
                         return true;
                     }
                     return false;
@@ -395,15 +365,6 @@ public class SuperVideoPlayer extends RelativeLayout {
         mSuperVideoView.setVisibility(GONE);
     }
 
-    /***
-     * 获取支持的DLNA设备
-     *
-     * @return DLNA设备列表
-     */
-    public List<Device> getDevices() {
-        return mDevices;
-    }
-
     public boolean isAutoHideController() {
         return mAutoHideController;
     }
@@ -445,23 +406,12 @@ public class SuperVideoPlayer extends RelativeLayout {
         mDLNARootLayout.setVisibility(GONE);
         showProgressView(false);
 
-        mDLNARootLayout.setOnClickListener(mOnClickListener);
-        mDLNARootLayout.findViewById(R.id.txt_dlna_exit).setOnClickListener(mOnClickListener);
         mCloseBtnView.setOnClickListener(mOnClickListener);
-        mTvBtnView.setOnClickListener(mOnClickListener);
         mProgressBarView.setOnClickListener(mOnClickListener);
 
         mAllVideo = new ArrayList<>();
     }
 
-    /**
-     * 检测DLNA信息，如果有支持的设备，显示按钮
-     */
-    private void initDLNAInfo() {
-        mDevices = DLNAContainer.getInstance().getDevices();
-        setController(new MultiPointController());
-        setDLNAButton(mDevices.size() > 0);
-    }
 
     /**
      * 显示DLNA可以推送的按钮
@@ -561,9 +511,7 @@ public class SuperVideoPlayer extends RelativeLayout {
         }
     }
 
-    /***
-     *
-     */
+
     private void showOrHideController() {
         mMediaController.closeAllSwitchList();
         if (mMediaController.getVisibility() == View.VISIBLE) {
@@ -590,10 +538,6 @@ public class SuperVideoPlayer extends RelativeLayout {
     private void alwaysShowController() {
         mHandler.removeMessages(MSG_HIDE_CONTROLLER);
         mMediaController.setVisibility(View.VISIBLE);
-    }
-
-    private void resetPlayVideo() {
-
     }
 
     private void resetHideTimer() {
@@ -629,82 +573,6 @@ public class SuperVideoPlayer extends RelativeLayout {
 
     private void setController(IController controller) {
         mController = controller;
-    }
-
-    private void shareToTv() {
-        Toast.makeText(mContext, "开始连接电视中", Toast.LENGTH_SHORT).show();
-        showProgressView(true);
-        DLNAContainer.getInstance().setSelectedDevice(mDevices.get(0));
-        mSelectDevice = DLNAContainer.getInstance().getSelectedDevice();
-        setController(new MultiPointController());
-        if (mController == null || DLNAContainer.getInstance().getSelectedDevice() == null) {
-            Toast.makeText(mContext, "数据异常", Toast.LENGTH_SHORT).show();
-            return;
-        }
-        playVideoOnTv(mNowPlayVideo.getPlayUrl().getUrl());
-    }
-
-
-    /**
-     * 处理电视播放的结果，是否成功
-     *
-     * @param message message
-     */
-    private void shareToTvResult(Message message) {
-        boolean isSuccess = message.arg1 == 1;
-        if (isSuccess) {
-            showDLNAController();
-            setDLNAButton(false);
-            setCloseButton(false);
-            pausePlay(false);
-            mProgressBarView.setVisibility(View.GONE);
-        } else {
-            mDLNARootLayout.setVisibility(GONE);
-            Toast.makeText(mContext, "推送到电视播放失败了", Toast.LENGTH_SHORT).show();
-        }
-    }
-
-    /**
-     * 从电视播放退出的结果
-     *
-     * @param message message
-     */
-    private void exitFromTvResult(Message message) {
-        boolean isSuccess = message.arg1 == 1;
-        mDLNARootLayout.setVisibility(GONE);
-        initDLNAInfo();
-        playVideoAtLastPos();
-        if (!isSuccess) {
-            Toast.makeText(mContext, "电视播放退出失败，请手动退出", Toast.LENGTH_SHORT).show();
-        }
-        mProgressBarView.setVisibility(GONE);
-    }
-
-    /**
-     * 显示推送视频播放控制页面
-     */
-    private void showDLNAController() {
-        String name = DLNAContainer.getInstance().getSelectedDevice().getFriendlyName();
-        String title = mContext.getResources().getString(R.string.dlna_device_title, TextUtils.isEmpty(name) ? "您的电视" : name);
-        mDLNARootLayout.setVisibility(VISIBLE);
-        ((TextView) mDLNARootLayout.findViewById(R.id.txt_dlna_title)).setText(title);
-    }
-
-    /**
-     * Start to play the video.
-     *
-     * @param path The video path.
-     */
-    private synchronized void playVideoOnTv(final String path) {
-        new Thread() {
-            public void run() {
-                final boolean isSuccess = mController.play(mSelectDevice, path);
-                Message message = new Message();
-                message.what = MSG_PLAY_ON_TV_RESULT;
-                message.arg1 = isSuccess ? 1 : 0;
-                mHandler.sendMessage(message);
-            }
-        }.start();
     }
 
     /**

@@ -37,7 +37,6 @@ public class AppContext extends Application {
         sResource = sContext.getResources();
         LeakCanary.install(this);
         sCacheDir = getFilesDir().getAbsolutePath() + File.separator + "cached_videos";
-        // init FileDownloader
         initFileDownloader();
     }
 
@@ -59,7 +58,6 @@ public class AppContext extends Application {
     @Override
     public void onTerminate() {
         super.onTerminate();
-        // release FileDownloader
         releaseFileDownloader();
     }
 
@@ -73,29 +71,17 @@ public class AppContext extends Application {
         super.onTrimMemory(level);
     }
 
-    // init FileDownloader
     private void initFileDownloader() {
-
-        // 1.create FileDownloadConfiguration.Builder
         FileDownloadConfiguration.Builder builder = new FileDownloadConfiguration.Builder(this);
 
-        // 2.config FileDownloadConfiguration.Builder
         builder.configFileDownloadDir(sCacheDir); // config the download path
         LogUtil.d(TAG, "cacheDir:" + sCacheDir);
 
-        // allow 3 download tasks at the same time
         builder.configDownloadTaskSize(3);
-
-        // config retry download times when failed
         builder.configRetryDownloadTimes(5);
-
-        // enable debug mode
         //builder.configDebugMode(true);
-
-        // config connect timeout
         builder.configConnectTimeout(25000); // 25s
 
-        // 3.init FileDownloader with the configuration
         FileDownloadConfiguration configuration = builder.build();
         FileDownloader.init(configuration);
     }

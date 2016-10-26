@@ -1,4 +1,4 @@
-package com.shane.android.videoplayer.engine;
+package com.shane.android.videoplayer.coder;
 
 import com.shane.android.videoplayer.interf.IFileCoder;
 import com.shane.android.videoplayer.util.CoderUtil;

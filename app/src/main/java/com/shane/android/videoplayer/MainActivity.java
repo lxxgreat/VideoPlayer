@@ -1,6 +1,5 @@
 package com.shane.android.videoplayer;
 
-import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
 import android.os.Bundle;
@@ -12,9 +11,7 @@ import android.widget.Toast;
 
 import com.shane.android.videoplayer.bean.Video;
 import com.shane.android.videoplayer.bean.VideoUrl;
-import com.shane.android.videoplayer.engine.DLNAContainer;
-import com.shane.android.videoplayer.engine.MP4HeaderCoder;
-import com.shane.android.videoplayer.service.DLNAService;
+import com.shane.android.videoplayer.coder.MP4HeaderCoder;
 import com.shane.android.videoplayer.util.DensityUtil;
 import com.shane.android.videoplayer.util.FileUtil;
 import com.shane.android.videoplayer.util.LogUtil;
@@ -38,7 +35,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     String remote1 = "http://114.55.231.90:1987/static/public/MP4/test1.mp4";
     String remote2 = "http://114.55.231.90:1987/static/public/MP4/test2.mp4";
     String remote3 = "http://114.55.231.90:1987/static/public/MP4/test3.mp4";
-    String local = "/sdcard/test2.mp4";
+
     private HashMap<String, ArrayList<VideoUrl>> mapUrlVideo = new HashMap<String, ArrayList<VideoUrl>>();
 
     private SuperVideoPlayer.VideoPlayCallbackImpl mVideoPlayCallback = new SuperVideoPlayer.VideoPlayCallbackImpl() {
@@ -78,10 +75,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         mPlayBtnView.setOnClickListener(this);
         mSuperVideoPlayer.setVideoPlayCallback(mVideoPlayCallback);
 
-
         FileDownloader.registerDownloadStatusListener(mOnFileDownloadStatusListener);
         mapUrlVideo.clear();
-        startDLNAService();
     }
 
     private Video addUrl(String url, String name) {
@@ -126,7 +121,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        stopDLNAService();
+
         // pause all downloads
         FileDownloader.pauseAll();
         // unregisterDownloadStatusListener
@@ -176,27 +171,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
-    private void startDLNAService() {
-        // Clear the device container.
-        DLNAContainer.getInstance().clear();
-        Intent intent = new Intent(getApplicationContext(), DLNAService.class);
-        startService(intent);
-    }
-
-    private void stopDLNAService() {
-        Intent intent = new Intent(getApplicationContext(), DLNAService.class);
-        stopService(intent);
-    }
-
     private OnFileDownloadStatusListener mOnFileDownloadStatusListener = new OnSimpleFileDownloadStatusListener() {
         @Override
         public void onFileDownloadStatusRetrying(DownloadFileInfo downloadFileInfo, int retryTimes) {
-
         }
 
         @Override
         public void onFileDownloadStatusWaiting(DownloadFileInfo downloadFileInfo) {
-            // waiting for download(wait for other tasks paused, or FileDownloader is busy for other operations)
         }
 
         @Override
@@ -219,7 +200,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         @Override
         public void onFileDownloadStatusPrepared(DownloadFileInfo downloadFileInfo) {
-            // prepared(connected)
             LogUtil.d(TAG, "size, onFileDownloadStatusPrepared:" + downloadFileInfo.getFileSizeLong());
         }
 
@@ -231,7 +211,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         @Override
         public void onFileDownloadStatusPaused(DownloadFileInfo downloadFileInfo) {
-            // download paused
         }
 
         @Override
