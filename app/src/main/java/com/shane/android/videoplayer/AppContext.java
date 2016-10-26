@@ -23,7 +23,7 @@ import java.io.File;
 public class AppContext extends Application {
     private static final String TAG = AppContext.class.getSimpleName();
 
-    public static final boolean DEBUG = false;
+    public static final boolean DEBUG = true;
     public static final int MAX_CACHE_FILE_SIZE = 1024 * 1024 * 20; // 20MB
 
     private static Context sContext;
@@ -72,7 +72,7 @@ public class AppContext extends Application {
         builder.configDownloadTaskSize(3);
         builder.configRetryDownloadTimes(5);
         //builder.configDebugMode(true);
-        builder.configConnectTimeout(25000); // 25s
+        builder.configConnectTimeout(60000); // 60s
 
         FileDownloadConfiguration configuration = builder.build();
         FileDownloader.init(configuration);
