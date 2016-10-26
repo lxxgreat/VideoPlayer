@@ -140,7 +140,7 @@ public class MediaController extends FrameLayout implements SeekBar.OnSeekBarCha
     }
 
     public void setPlayState(PlayState playState) {
-        mPlayImg.setImageResource(playState.equals(PlayState.PLAY) ? R.drawable.biz_video_pause : R.drawable.biz_video_play);
+        mPlayImg.setImageResource(playState.equals(PlayState.PLAY) ? R.drawable.video_pause : R.drawable.video_play);
     }
 
     public void setPageType(PageType pageType) {
@@ -178,7 +178,7 @@ public class MediaController extends FrameLayout implements SeekBar.OnSeekBarCha
     }
 
     private void initView(Context context) {
-        View.inflate(context, R.layout.biz_video_media_controller, this);
+        View.inflate(context, R.layout.video_media_controller, this);
         mPlayImg = (ImageView) findViewById(R.id.pause);
         mProgressSeekBar = (SeekBar) findViewById(R.id.media_controller_progress);
         mVideoSrcSwitcher = (EasySwitcher) findViewById(R.id.video_src_switcher);

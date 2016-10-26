@@ -11,8 +11,7 @@
     <style name="video_progressbar_style">
         <item name="android:maxWidth">43.0dip</item>
         <item name="android:maxHeight">43.0dip</item>
-        <item name="android:indeterminateDrawable">@anim/biz_news_detailpage_loading_large_anim
-        </item>
+        <item name="android:indeterminateDrawable">@anim/loading_large_anim</item>
         <item name="android:minWidth">43.0dip</item>
         <item name="android:minHeight">43.0dip</item>
     </style>

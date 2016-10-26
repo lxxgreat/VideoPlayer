@@ -15,17 +15,17 @@
 
 4. 当文件大小大于20M时, 考虑android对app内存要求, 直接播放网络视频
 
-5. 在MI4,MI5上已验证
+5. 在MI3,MI4,MI5, N5上已验证
 
-6. 服务器文件大小如下:
+6. 服务器地址及文件大小如下:
+(1) 地址如: http://114.55.231.90:1987/static/public/MP4/test1.mp4
+(2) 大小
 -rw-r--r-- 1 shane wheel 35073567 10月 22 21:21 test1.mp4
 -rw-r--r-- 1 shane wheel 20704310 10月 22 23:20 test2.mp4
 -rw-r--r-- 1 shane wheel  7136220 10月 26 02:43 test3.mp4
 
 7. TODO LIST
-(0) 在更多机型上验证
-(1) 性能优化
-(2) 架构优化
+
 
 
 

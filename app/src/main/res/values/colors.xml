@@ -30,9 +30,9 @@
     <color name="transparent">#00000000</color>
     <color name="window_background">#EBEBEB</color>
 
-    <color name="biz_audio_progress_bg">#00b2ff</color>
-    <color name="biz_audio_progress_first">#ffffff</color>
-    <color name="biz_audio_progress_second">#6b6666</color>
+    <color name="audio_progress_bg">#00b2ff</color>
+    <color name="audio_progress_first">#ffffff</color>
+    <color name="audio_progress_second">#6b6666</color>
 
     <color name="default_bg">#aa000000</color>
     <color name="select_color">#00b2ff</color>
