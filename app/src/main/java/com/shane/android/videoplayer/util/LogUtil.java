@@ -8,6 +8,7 @@ import android.util.Log;
  * @created 2016-10-23
  */
 public class LogUtil {
+
 	private static final String TAG = "VideoPlayer";
 
 	private static final int LOG_LEVEL = 6;
@@ -18,6 +19,8 @@ public class LogUtil {
 	private static final int WARN = 2;
 	private static final int ERROR = 1;
 	private static final int WTF = 0;
+
+	private LogUtil() { /* empty */ }
 
 	public static void v(String tag, String msg) {
 		if (LOG_LEVEL > VERBOSE) {

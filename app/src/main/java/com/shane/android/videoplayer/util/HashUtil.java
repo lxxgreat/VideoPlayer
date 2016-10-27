@@ -11,11 +11,12 @@ import java.security.NoSuchAlgorithmException;
 
 public class HashUtil {
 
-    private HashUtil() {
-    }
+    private static final String TAG = HashUtil.class.getSimpleName();
 
     public static final String MD5 = "MD5";
     public static final String SHA1 = "SHA1";
+
+    private HashUtil() { /* empty */ }
 
     public static String getMD5(String content) {
         return getHash(content, MD5);

@@ -7,6 +7,11 @@ package com.shane.android.videoplayer.util;
  */
 
 public class HexUtil {
+
+    private static final String TAG = HexUtil.class.getSimpleName();
+
+    private HexUtil() { /* empty */ }
+
     /**
      * Convert hex string to byte[]
      * @param hexString the hex string

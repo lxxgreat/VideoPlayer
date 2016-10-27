@@ -2,7 +2,6 @@ package com.shane.android.videoplayer.util;
 
 
 import android.util.Base64;
-import android.util.Log;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -23,7 +22,8 @@ import javax.crypto.spec.SecretKeySpec;
 
 
 public class CoderUtil {
-    private static final String TAG = "CoderUtils";
+
+    private static final String TAG = CoderUtil.class.getSimpleName();
 
     public static final String AES_ALGORITHM = "AES/CBC/PKCS5Padding";
 
@@ -31,6 +31,8 @@ public class CoderUtil {
             "0", "1", "2", "3", "4", "5", "6", "7",
             "8", "9", "a", "b", "c", "d", "e", "f"
     };
+
+    private CoderUtil() { /* empty */ }
 
     public static final String encodeMD5(String string) {
         if (null == string || string.length() == 0) {
@@ -75,7 +77,7 @@ public class CoderUtil {
             try {
                 fis.close();
             } catch (IOException e) {
-                Log.e(TAG, " IOException:" + e);
+                LogUtil.e(TAG, " IOException:" + e);
             }
         }
         if(md5!=null){

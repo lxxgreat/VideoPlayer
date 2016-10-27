@@ -19,6 +19,8 @@ import java.io.OutputStream;
 public class FileUtil {
     private static final String TAG = FileUtil.class.getSimpleName();
 
+    private FileUtil() { /* empty */ }
+
     public static byte[] getFileBytes(String path) {
         if (TextUtils.isEmpty(path)) {
             return null;

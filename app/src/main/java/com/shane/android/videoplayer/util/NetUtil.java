@@ -12,6 +12,10 @@ import android.net.wifi.WifiManager;
  */
 public class NetUtil {
 
+    private static final String TAG = NetUtil.class.getSimpleName();
+
+	private NetUtil() { /* empty */ }
+
 	/**
 	 * 判断当前网络是否可用
 	 */

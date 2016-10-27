@@ -8,6 +8,9 @@ import android.content.Context;
  * @created 2016-10-23
  */
 public class DensityUtil {
+	private static final String TAG = DensityUtil.class.getSimpleName();
+
+	private DensityUtil() { /* empty */ }
 
 	public static final float getHeightInPx(Context context) {
 		final float height = context.getResources().getDisplayMetrics().heightPixels;
